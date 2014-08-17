@@ -1,0 +1,17 @@
+# Provide one entry per user, using the same username as their beeminder account.
+beeminder_user_1:
+  url: /bmndr/beeminder_user_1 # endpoint for the server to serve their page from
+  token: IMRwHnpcFIM6N44eNWSu # Personal authentication token. See https://www.beeminder.com/api#auth
+  goals:
+    # Each line here is a beeminder goal.
+    # The format is <goal name>: Human readable name
+    # The goal name should match the name in the goal's beeminder url: https://www.beeminder.com/<user>/goals/<goal name>
+    - inbox: Emptied inbox
+
+beeminder_user_2:
+  url: /bmndr/user_2
+  token: TeZKrlE3sHHMnG6jNeGb
+  goals:
+    - my_inbox: Emptied inbox
+    - meditation: Ten minutes of meditation
+    - chores: Did daily chore
