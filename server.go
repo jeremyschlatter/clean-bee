@@ -6,9 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"gopkg.in/yaml.v1"
@@ -16,7 +18,7 @@ import (
 
 var (
 	addr       = flag.String("http", ":8080", "HTTP service address (e.g., '127.0.0.1:6060' or just ':6060')")
-	configPath = flag.String("conf", "settings.yaml", "path to settings file")
+	configPath = flag.String("conf", "settings.yaml", "Path to settings file. Can be a local file or an http/https url.")
 )
 
 type userConf struct {
@@ -27,10 +29,27 @@ type userConf struct {
 type config map[string]userConf
 
 func readConfig() config {
-	b, err := ioutil.ReadFile(*configPath)
+	var r io.ReadCloser
+	var err error
+	u, _ := url.Parse(*configPath)
+
+	if u.Scheme == "http" || u.Scheme == "https" {
+		var resp *http.Response
+		resp, err = http.Get(*configPath)
+		r = resp.Body
+	} else {
+		r, err = os.Open(*configPath)
+	}
+	if err != nil {
+		log.Fatal("Couldn't access settings file: ", err)
+	}
+	defer r.Close()
+
+	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatal("Couldn't read settings file: ", err)
 	}
+
 	var c config
 	if err = yaml.Unmarshal(b, &c); err != nil {
 		log.Fatal("Failed to parse settings: ", err)
