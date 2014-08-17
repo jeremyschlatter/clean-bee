@@ -39,7 +39,7 @@ func readConfig() config {
 }
 
 func postDatapoint(k, user, token string) error {
-	url := fmt.Sprintf("https://www.beeminder.com/api/v1/users/%s/goals/%s/datapoints.json?value=1&comment=entered+with+jeremy+form&auth_token=%s", user, k, token)
+	url := fmt.Sprintf("https://www.beeminder.com/api/v1/users/%s/goals/%s/datapoints.json?value=1&comment=entered+with+clean-bee+form&auth_token=%s", user, k, token)
 	resp, err := http.PostForm(url, nil)
 	if err != nil {
 		return err
