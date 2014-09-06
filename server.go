@@ -6,19 +6,19 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 
+	"github.com/coreos/go-etcd/etcd"
 	"gopkg.in/yaml.v1"
 )
 
 var (
 	addr       = flag.String("http", ":8080", "HTTP service address (e.g., '127.0.0.1:6060' or just ':6060')")
-	configPath = flag.String("conf", "settings.yaml", "Path to settings file. Can be a local file or an http/https url.")
+	configPath = flag.String("conf", "settings.yaml", "Path to settings file.")
+	etcdPath   = flag.String("etcd", "", "Path to settings file on etcd.")
 )
 
 type userConf struct {
@@ -28,24 +28,22 @@ type userConf struct {
 
 type config map[string]userConf
 
-func readConfig() config {
-	var r io.ReadCloser
-	var err error
-	u, _ := url.Parse(*configPath)
-
-	if u.Scheme == "http" || u.Scheme == "https" {
-		var resp *http.Response
-		resp, err = http.Get(*configPath)
-		r = resp.Body
-	} else {
-		r, err = os.Open(*configPath)
-	}
+func settingsFromEtcd() ([]byte, error) {
+	resp, err := etcd.NewClient([]string{"https://127.0.0.1:4001"}).Get(*etcdPath, false, false)
 	if err != nil {
-		log.Fatal("Couldn't access settings file: ", err)
+		return nil, err
 	}
-	defer r.Close()
+	return []byte(resp.Node.Value), nil
+}
 
-	b, err := ioutil.ReadAll(r)
+func readConfig() config {
+	var b []byte
+	var err error
+	if *etcdPath == "" {
+		b, err = settingsFromEtcd()
+	} else {
+		b, err = ioutil.ReadFile(*configPath)
+	}
 	if err != nil {
 		log.Fatal("Couldn't read settings file: ", err)
 	}
